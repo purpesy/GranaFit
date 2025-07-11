@@ -6,5 +6,6 @@ var router = express.Router();
 router.get("/", HomeController.index);
 router.get("/users", UserController.index);
 router.get("/users/:id", UserController.findUser);
+router.post("/users", UserController.newUser);
 
 module.exports = router;

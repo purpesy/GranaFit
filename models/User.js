@@ -28,8 +28,6 @@ class User {
         foto_user: userData.foto_user || null,
         email_user: userData.email_user,
         senha_user: userData.senha_user,
-        plano_user: userData.plano_user || "free",
-        limite_transacoes: userData.limite_transacoes || 100,
         token_verificacao: userData.token_verificacao || null,
         email_verificado: false,
         status_user: "ativo",
