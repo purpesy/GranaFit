@@ -1,4 +1,5 @@
 var db = require("../database/connection.js");
+const { v4: uuidv4 } = require('uuid');
 
 class User {
   async findAll() {

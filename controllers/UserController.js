@@ -2,6 +2,7 @@ var User = require("../models/User");
 const userSchema = require("../validators/userSchema");
 const userUpdateSchema = require("../validators/userUpdateSchema");
 const bcrypt = require("bcrypt");
+var jwt = require("jsonwebtoken");
 
 class UserController {
   async index(req, res) {
@@ -43,11 +44,12 @@ class UserController {
         const mensagens = error.details.map((err) => err.message);
         return res.status(400).json({ error: mensagens });
       }
-
+      // verifica email
       const existingUser = await User.findByEmail(value.email_user);
       if (existingUser) {
         return res.status(400).json({ erro: "Email já cadastrado." });
       }
+      // hash de senha
       const saltRounds = 10;
       const senhaHash = await bcrypt.hash(value.senha_user, saltRounds);
       await User.create({
@@ -73,12 +75,12 @@ class UserController {
         const mensagens = error.details.map((e) => e.message);
         return res.status(400).json({ erros: mensagens });
       }
-
+      // hash de senha
       if (value.senha_user) {
         const saltRounds = 10;
         value.senha_user = await bcrypt.hash(value.senha_user, saltRounds);
       }
-
+      // verifica email
       if (value.email_user) {
         const existingUser = await User.findByEmail(value.email_user);
         if (existingUser && existingUser.id_user !== Number(userId)) {
@@ -134,6 +136,44 @@ class UserController {
     } catch (err) {
       console.error("Erro ao deletar usuário:", err);
       return res.status(500).json({ erro: "Erro interno ao deletar usuário." });
+    }
+  }
+
+  async login(req, res) {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ erro: "Email e senha são obrigatórios." });
+      }
+
+      const user = await User.findByEmail(email);
+      if (!user) {
+        return res.status(404).json({ erro: "Usuário não encontrado." });
+      }
+
+      const senhaValida = await bcrypt.compare(password, user.senha_user);
+      if (!senhaValida) {
+        return res.status(401).json({ erro: "Senha incorreta." });
+      }
+
+      const token = jwt.sign(
+        {
+          id: user.id_user,
+          email: user.email_user,
+          cargo: user.cargo_user
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      );
+
+      return res.status(200).json({
+        mensagem: "Login realizado com sucesso.",
+        token,
+      });
+    } catch (err) {
+      console.error("Erro no login:", err);
+      return res.status(500).json({ erro: "Erro interno no login." });
     }
   }
 }
