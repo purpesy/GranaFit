@@ -38,6 +38,17 @@ class User {
       throw error;
     }
   }
+
+  async update(id, data) {
+  try {
+    await db('tbl_users').where('id_user', id).update(data);
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    throw error;
+  }
+}
+
+
 }
 
 module.exports = new User();

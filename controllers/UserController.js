@@ -1,5 +1,6 @@
 var User = require("../models/User");
 const userSchema = require("../validators/userSchema");
+const userUpdateSchema = require('../validators/userUpdateSchema');
 const bcrypt = require("bcrypt");
 
 class UserController {
@@ -51,6 +52,29 @@ class UserController {
     } catch (err) {
       console.error("Erro no registro de usuário:", err);
       return res.status(500).json({ erro: "Erro interno ao cadastrar." });
+    }
+  }
+
+  async updateUser(req, res) {
+    try {
+      const userId = req.params.id;
+      const { error, value } = userUpdateSchema.validate(req.body, { abortEarly: false });
+      if (error) {
+        const mensagens = error.details.map(e => e.message);
+        return res.status(400).json({ erros: mensagens });
+      }
+
+      if (value.senha_user) {
+        const saltRounds = 10;
+        value.senha_user = await bcrypt.hash(value.senha_user, saltRounds);
+      }
+
+      await User.update(userId, value);
+
+      return res.status(200).json({ mensagem: 'Usuário atualizado com sucesso!' });
+    } catch (err) {
+      console.error('Erro ao atualizar usuário:', err);
+      return res.status(500).json({ erro: 'Erro interno ao atualizar.' });
     }
   }
 }

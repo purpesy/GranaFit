@@ -7,5 +7,6 @@ router.get("/", HomeController.index);
 router.get("/users", UserController.index);
 router.get("/users/:id", UserController.findUser);
 router.post("/users", UserController.newUser);
+router.put("/users/:id", UserController.updateUser);
 
 module.exports = router;
