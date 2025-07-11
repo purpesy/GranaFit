@@ -1,10 +1,10 @@
 require("dotenv").config({ quiet: true });
 var express = require("express");
+const router = require('./routes/routes.js');
+
 var app = express();
 
-app.get('/', (req, res) => {
-    res.send("Inicio de um projeto foda!");
-})
+app.use("/", router);
 
 const port = process.env.PORT;
 app.listen(port,()=>{
