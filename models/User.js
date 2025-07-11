@@ -40,15 +40,36 @@ class User {
   }
 
   async update(id, data) {
+    try {
+      await db("tbl_users").where("id_user", id).update(data);
+    } catch (error) {
+      console.error("Erro ao atualizar usuário:", error);
+      throw error;
+    }
+  }
+
+  async softDelete(id) {
   try {
-    await db('tbl_users').where('id_user', id).update(data);
+    const affectedRows = await db('tbl_users')
+      .where('id_user', id)
+      .update({ status_user: 'suspenso' });
+    return affectedRows;
   } catch (error) {
-    console.error('Erro ao atualizar usuário:', error);
+    console.error('Erro ao suspender usuário:', error);
     throw error;
   }
 }
 
 
+  async delete(id) {
+    try {
+      const affectedRows = await db("tbl_users").where("id_user", id).del();
+      return affectedRows; // número de registros deletados
+    } catch (error) {
+      console.error("Erro ao deletar usuário:", error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new User();

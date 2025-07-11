@@ -77,6 +77,43 @@ class UserController {
       return res.status(500).json({ erro: 'Erro interno ao atualizar.' });
     }
   }
+  
+  // atualiza status para suspenso
+  async softDeleteUser(req, res) {
+    try {
+      const userId = req.params.id;
+
+      const updatedCount = await User.softDelete(userId);
+
+      if (updatedCount === 0) {
+        return res.status(404).json({ erro: 'Usuário não encontrado.' });
+      }
+
+      return res.status(200).json({ mensagem: 'Usuário suspenso com sucesso!' });
+    } catch (err) {
+      console.error('Erro ao suspender usuário:', err);
+      return res.status(500).json({ erro: 'Erro interno ao suspender usuário.' });
+    }
+  }
+
+  //  remove do banco
+  async deleteUser(req, res) {
+    try {
+      const userId = req.params.id;
+
+      const deletedCount = await User.delete(userId);
+
+      if (deletedCount === 0) {
+        return res.status(404).json({ erro: 'Usuário não encontrado.' });
+      }
+
+      return res.status(200).json({ mensagem: 'Usuário deletado com sucesso!' });
+    } catch (err) {
+      console.error('Erro ao deletar usuário:', err);
+      return res.status(500).json({ erro: 'Erro interno ao deletar usuário.' });
+    }
+  }
+
 }
 
 module.exports = new UserController();
