@@ -21,6 +21,16 @@ class User {
     }
   }
 
+  async findByEmail(email) {
+    try {
+      const result = await db("tbl_users").where("email_user", email).first();
+      return result || null;
+    } catch (error) {
+      console.error("Erro ao buscar usuário por email:", error);
+      throw error;
+    }
+  }
+
   async create(userData) {
     try {
       const result = await db("tbl_users").insert({
@@ -49,17 +59,16 @@ class User {
   }
 
   async softDelete(id) {
-  try {
-    const affectedRows = await db('tbl_users')
-      .where('id_user', id)
-      .update({ status_user: 'suspenso' });
-    return affectedRows;
-  } catch (error) {
-    console.error('Erro ao suspender usuário:', error);
-    throw error;
+    try {
+      const affectedRows = await db("tbl_users")
+        .where("id_user", id)
+        .update({ status_user: "suspenso" });
+      return affectedRows;
+    } catch (error) {
+      console.error("Erro ao suspender usuário:", error);
+      throw error;
+    }
   }
-}
-
 
   async delete(id) {
     try {

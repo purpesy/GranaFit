@@ -1,6 +1,6 @@
 var User = require("../models/User");
 const userSchema = require("../validators/userSchema");
-const userUpdateSchema = require('../validators/userUpdateSchema');
+const userUpdateSchema = require("../validators/userUpdateSchema");
 const bcrypt = require("bcrypt");
 
 class UserController {
@@ -35,20 +35,28 @@ class UserController {
   }
 
   async newUser(req, res) {
-
     try {
-      const { error, value } = userSchema.validate(req.body, {abortEarly: false});
+      const { error, value } = userSchema.validate(req.body, {
+        abortEarly: false,
+      });
       if (error) {
         const mensagens = error.details.map((err) => err.message);
         return res.status(400).json({ error: mensagens });
+      }
+
+      const existingUser = await User.findByEmail(value.email_user);
+      if (existingUser) {
+        return res.status(400).json({ erro: "Email já cadastrado." });
       }
       const saltRounds = 10;
       const senhaHash = await bcrypt.hash(value.senha_user, saltRounds);
       await User.create({
         ...value,
-        senha_user: senhaHash
+        senha_user: senhaHash,
       });
-      return res.status(201).json({ mensagem: "Usuário cadastrado com sucesso!" });
+      return res
+        .status(201)
+        .json({ mensagem: "Usuário cadastrado com sucesso!" });
     } catch (err) {
       console.error("Erro no registro de usuário:", err);
       return res.status(500).json({ erro: "Erro interno ao cadastrar." });
@@ -58,9 +66,11 @@ class UserController {
   async updateUser(req, res) {
     try {
       const userId = req.params.id;
-      const { error, value } = userUpdateSchema.validate(req.body, { abortEarly: false });
+      const { error, value } = userUpdateSchema.validate(req.body, {
+        abortEarly: false,
+      });
       if (error) {
-        const mensagens = error.details.map(e => e.message);
+        const mensagens = error.details.map((e) => e.message);
         return res.status(400).json({ erros: mensagens });
       }
 
@@ -69,16 +79,24 @@ class UserController {
         value.senha_user = await bcrypt.hash(value.senha_user, saltRounds);
       }
 
+      if (value.email_user) {
+        const existingUser = await User.findByEmail(value.email_user);
+        if (existingUser && existingUser.id_user !== Number(userId)) {
+          return res.status(400).json({ erro: "Email já cadastrado." });
+        }
+      }
+
       await User.update(userId, value);
 
-      return res.status(200).json({ mensagem: 'Usuário atualizado com sucesso!' });
+      return res
+        .status(200)
+        .json({ mensagem: "Usuário atualizado com sucesso!" });
     } catch (err) {
-      console.error('Erro ao atualizar usuário:', err);
-      return res.status(500).json({ erro: 'Erro interno ao atualizar.' });
+      console.error("Erro ao atualizar usuário:", err);
+      return res.status(500).json({ erro: "Erro interno ao atualizar." });
     }
   }
-  
-  // atualiza status para suspenso
+
   async softDeleteUser(req, res) {
     try {
       const userId = req.params.id;
@@ -86,17 +104,20 @@ class UserController {
       const updatedCount = await User.softDelete(userId);
 
       if (updatedCount === 0) {
-        return res.status(404).json({ erro: 'Usuário não encontrado.' });
+        return res.status(404).json({ erro: "Usuário não encontrado." });
       }
 
-      return res.status(200).json({ mensagem: 'Usuário suspenso com sucesso!' });
+      return res
+        .status(200)
+        .json({ mensagem: "Usuário suspenso com sucesso!" });
     } catch (err) {
-      console.error('Erro ao suspender usuário:', err);
-      return res.status(500).json({ erro: 'Erro interno ao suspender usuário.' });
+      console.error("Erro ao suspender usuário:", err);
+      return res
+        .status(500)
+        .json({ erro: "Erro interno ao suspender usuário." });
     }
   }
 
-  //  remove do banco
   async deleteUser(req, res) {
     try {
       const userId = req.params.id;
@@ -104,16 +125,17 @@ class UserController {
       const deletedCount = await User.delete(userId);
 
       if (deletedCount === 0) {
-        return res.status(404).json({ erro: 'Usuário não encontrado.' });
+        return res.status(404).json({ erro: "Usuário não encontrado." });
       }
 
-      return res.status(200).json({ mensagem: 'Usuário deletado com sucesso!' });
+      return res
+        .status(200)
+        .json({ mensagem: "Usuário deletado com sucesso!" });
     } catch (err) {
-      console.error('Erro ao deletar usuário:', err);
-      return res.status(500).json({ erro: 'Erro interno ao deletar usuário.' });
+      console.error("Erro ao deletar usuário:", err);
+      return res.status(500).json({ erro: "Erro interno ao deletar usuário." });
     }
   }
-
 }
 
 module.exports = new UserController();
