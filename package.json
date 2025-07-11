@@ -1,0 +1,32 @@
+{
+  "name": "granafit",
+  "version": "1.0.0",
+  "description": "Sistema para controle financeiro",
+  "homepage": "https://github.com/purpesy/GranaFit#readme",
+  "bugs": {
+    "url": "https://github.com/purpesy/GranaFit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/purpesy/GranaFit.git"
+  },
+  "license": "MIT",
+  "author": "Lucas Dev",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "finanças",
+    "controle financeiro",
+    "organizar dinheiro",
+    "granafit",
+    "nodejs"
+  ],
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
