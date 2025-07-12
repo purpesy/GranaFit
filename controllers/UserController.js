@@ -4,6 +4,7 @@ const userUpdateSchema = require("../validators/userUpdateSchema");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
+const PasswordToken = require("../models/PasswordToken")
 
 const userInstance = new User();
 
@@ -37,7 +38,9 @@ class UserController {
   // criar um user
   async newUser(req, res) {
     try {
-      const { error, value } = userSchema.validate(req.body, { abortEarly: false });
+      const { error, value } = userSchema.validate(req.body, {
+        abortEarly: false,
+      });
       if (error) {
         const mensagens = error.details.map((err) => err.message);
         return res.status(400).json({ error: mensagens });
@@ -55,7 +58,9 @@ class UserController {
         senha_user: senhaHash,
       });
 
-      return res.status(201).json({ mensagem: "Usuário cadastrado com sucesso!" });
+      return res
+        .status(201)
+        .json({ mensagem: "Usuário cadastrado com sucesso!" });
     } catch (err) {
       console.error("Erro no registro de usuário:", err);
       return res.status(500).json({ erro: "Erro interno ao cadastrar." });
@@ -86,7 +91,9 @@ class UserController {
       }
 
       await userInstance.update(userId, value);
-      return res.status(200).json({ mensagem: "Usuário atualizado com sucesso!" });
+      return res
+        .status(200)
+        .json({ mensagem: "Usuário atualizado com sucesso!" });
     } catch (err) {
       console.error("Erro ao atualizar usuário:", err);
       return res.status(500).json({ erro: "Erro interno ao atualizar." });
@@ -102,10 +109,14 @@ class UserController {
         return res.status(404).json({ erro: "Usuário não encontrado." });
       }
 
-      return res.status(200).json({ mensagem: "Usuário suspenso com sucesso!" });
+      return res
+        .status(200)
+        .json({ mensagem: "Usuário suspenso com sucesso!" });
     } catch (err) {
       console.error("Erro ao suspender usuário:", err);
-      return res.status(500).json({ erro: "Erro interno ao suspender usuário." });
+      return res
+        .status(500)
+        .json({ erro: "Erro interno ao suspender usuário." });
     }
   }
   // deletar user
@@ -118,7 +129,9 @@ class UserController {
         return res.status(404).json({ erro: "Usuário não encontrado." });
       }
 
-      return res.status(200).json({ mensagem: "Usuário deletado com sucesso!" });
+      return res
+        .status(200)
+        .json({ mensagem: "Usuário deletado com sucesso!" });
     } catch (err) {
       console.error("Erro ao deletar usuário:", err);
       return res.status(500).json({ erro: "Erro interno ao deletar usuário." });
@@ -130,7 +143,9 @@ class UserController {
       const { email, password } = req.body;
 
       if (!email || !password) {
-        return res.status(400).json({ erro: "Email e senha são obrigatórios." });
+        return res
+          .status(400)
+          .json({ erro: "Email e senha são obrigatórios." });
       }
 
       const user = await userInstance.findByEmail(email);
@@ -192,10 +207,14 @@ class UserController {
         html: `Clique no link para verificar seu email: <a href="${url}">${url}</a>`,
       });
 
-      return res.status(200).json({ mensagem: "Email de verificação enviado." });
+      return res
+        .status(200)
+        .json({ mensagem: "Email de verificação enviado." });
     } catch (err) {
       console.error("Erro ao enviar email de verificação:", err);
-      return res.status(500).json({ erro: "Erro ao enviar email de verificação." });
+      return res
+        .status(500)
+        .json({ erro: "Erro ao enviar email de verificação." });
     }
   }
   // verificar email atraves do token
@@ -206,14 +225,50 @@ class UserController {
       if (!token) return res.status(400).json({ erro: "Token obrigatório." });
 
       const user = await User.findByVerificationToken(token);
-      if (!user) return res.status(400).json({ erro: "Token inválido ou expirado." });
+      if (!user)
+        return res.status(400).json({ erro: "Token inválido ou expirado." });
 
       await User.verifyEmail(user.id_user);
 
-      return res.status(202).json({ mensagem: "Email verificado com sucesso!" });
+      return res
+        .status(202)
+        .json({ mensagem: "Email verificado com sucesso!" });
     } catch (err) {
       console.error("Erro na verificação de email:", err);
-      return res.status(500).json({ erro: "Erro interno na verificação de email." });
+      return res
+        .status(500)
+        .json({ erro: "Erro interno na verificação de email." });
+    }
+  }
+  // / Método para recuperar a senha de um usuário
+  async recoverPassword(req, res) {
+    var { email } = req.body;
+    var result = await PasswordToken.create(email);
+
+    if (result.status) {
+      return res.status(200).send("" + result.token);
+    } else {
+      return res.status(406).json({ error: result.error });
+    }
+  }
+  // Método para alterar a senha de um usuário
+  async changePassword(req, res) {
+    var token = req.body.token;
+    var password = req.body.password;
+
+    const senhaHash = await bcrypt.hash(password, 10);
+
+    var isTokenValid = await PasswordToken.validade(token);
+    if (isTokenValid.status) {
+      await userInstance.changePassword(
+        isTokenValid.token.id_user,
+        senhaHash,
+        isTokenValid.token.token
+      );
+      await PasswordToken.setUsed(token)
+      return res.status(200).json({ mensagem: "Senha alterada com sucesso" });
+    } else {
+      return res.status(406).json({ error: "Token inválido" });
     }
   }
 }

@@ -1,5 +1,5 @@
 var db = require("../database/connection.js");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 
 class User {
   async findAll() {
@@ -14,7 +14,11 @@ class User {
 
   async findById(id) {
     try {
-      var result = await db.select().from("tbl_users").where("id_user", id).first();
+      var result = await db
+        .select()
+        .from("tbl_users")
+        .where("id_user", id)
+        .first();
       return result;
     } catch (error) {
       console.error("Erro ao buscar usuário: ", error);
@@ -83,17 +87,32 @@ class User {
 
   static async generateVerificationToken(userId) {
     const token = uuidv4();
-    await db('tbl_users').where('id_user', userId).update({ token_verificacao: token });
+    await db("tbl_users")
+      .where("id_user", userId)
+      .update({ token_verificacao: token });
     return token;
   }
 
   static async findByVerificationToken(token) {
-    const user = await db('tbl_users').where('token_verificacao', token).first();
+    const user = await db("tbl_users")
+      .where("token_verificacao", token)
+      .first();
     return user;
   }
 
   static async verifyEmail(userId) {
-    return await db('tbl_users').where('id_user', userId).update({ email_verificado: true, token_verificacao: null });
+    return await db("tbl_users")
+      .where("id_user", userId)
+      .update({ email_verificado: true, token_verificacao: null });
+  }
+
+  async changePassword(id, newPassword, token) {
+    try {
+      await db("tbl_users").where("id_user", id).update({ senha_user: newPassword });
+    } catch (error) {
+      console.error("Erro ao alterar senha:", error);
+      throw error;
+    }
   }
 }
 

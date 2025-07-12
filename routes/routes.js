@@ -15,6 +15,8 @@ router.post('/users/:id/send-verification-email', auth, UserController.sendVerif
 
 // rotas que precisam de autenticação de usuario
 router.put("/users/:id", auth, UserController.updateUser);
+router.post('/recover-password', UserController.recoverPassword);
+router.post('/change-password', UserController.changePassword);
 // rotas públicas
 router.post("/users", UserController.newUser);
 router.post("/login", UserController.login);
