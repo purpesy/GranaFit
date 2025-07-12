@@ -14,7 +14,7 @@ class User {
 
   async findById(id) {
     try {
-      var result = await db.select().from("tbl_users").where("id_user", id);
+      var result = await db.select().from("tbl_users").where("id_user", id).first();
       return result;
     } catch (error) {
       console.error("Erro ao buscar usuário: ", error);
@@ -80,6 +80,21 @@ class User {
       throw error;
     }
   }
+
+  static async generateVerificationToken(userId) {
+    const token = uuidv4();
+    await db('tbl_users').where('id_user', userId).update({ token_verificacao: token });
+    return token;
+  }
+
+  static async findByVerificationToken(token) {
+    const user = await db('tbl_users').where('token_verificacao', token).first();
+    return user;
+  }
+
+  static async verifyEmail(userId) {
+    return await db('tbl_users').where('id_user', userId).update({ email_verificado: true, token_verificacao: null });
+  }
 }
 
-module.exports = new User();
+module.exports = User;
