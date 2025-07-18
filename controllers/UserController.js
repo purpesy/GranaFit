@@ -4,7 +4,7 @@ const userUpdateSchema = require("../validators/userUpdateSchema");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
-const PasswordToken = require("../models/PasswordToken")
+const PasswordToken = require("../models/PasswordToken");
 
 const userInstance = new User();
 
@@ -41,26 +41,44 @@ class UserController {
       const { error, value } = userSchema.validate(req.body, {
         abortEarly: false,
       });
+
       if (error) {
         const mensagens = error.details.map((err) => err.message);
         return res.status(400).json({ error: mensagens });
       }
 
-      const existingUser = await userInstance.findByEmail(value.email_user);
+      const existingUser = await userInstance.findByEmail(value.email);
       if (existingUser) {
         return res.status(400).json({ erro: "Email já cadastrado." });
       }
 
-      const senhaHash = await bcrypt.hash(value.senha_user, 10);
+      const senhaHash = await bcrypt.hash(value.password, 10);
 
       await userInstance.create({
-        ...value,
+        nome_user: value.name,
+        email_user: value.email,
         senha_user: senhaHash,
       });
 
-      return res
-        .status(201)
-        .json({ mensagem: "Usuário cadastrado com sucesso!" });
+      // busca o usuário recém-criado
+      const user = await userInstance.findByEmail(value.email);
+
+      // cria o token
+      const token = jwt.sign(
+        {
+          id: user.id_user,
+          email: user.email_user,
+          cargo: user.cargo_user,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      );
+
+      return res.status(201).json({
+        mensagem: "Usuário cadastrado com sucesso!",
+        token,
+        user,
+      });
     } catch (err) {
       console.error("Erro no registro de usuário:", err);
       return res.status(500).json({ erro: "Erro interno ao cadastrar." });
@@ -265,7 +283,7 @@ class UserController {
         senhaHash,
         isTokenValid.token.token
       );
-      await PasswordToken.setUsed(token)
+      await PasswordToken.setUsed(token);
       return res.status(200).json({ mensagem: "Senha alterada com sucesso" });
     } else {
       return res.status(406).json({ error: "Token inválido" });

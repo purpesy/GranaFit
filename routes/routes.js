@@ -18,7 +18,7 @@ router.put("/users/:id", auth, UserController.updateUser);
 router.post('/recover-password', UserController.recoverPassword);
 router.post('/change-password', UserController.changePassword);
 // rotas públicas
-router.post("/users", UserController.newUser);
+router.post("/cadastro", UserController.newUser);
 router.post("/login", UserController.login);
 router.get('/verify-email', UserController.verifyEmail);
 
