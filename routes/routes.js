@@ -1,6 +1,7 @@
 var express =  require('express');
 var HomeController = require("../controllers/HomeController")
 var UserController = require("../controllers/UserController")
+var CategoriaController = require("../controllers/CategoriaController")
 var adminAuth = require("../middlewares/adminAuth.js")
 var auth = require("../middlewares/auth.js")
 var router = express.Router();
@@ -21,5 +22,14 @@ router.post('/change-password', UserController.changePassword);
 router.post("/cadastro", UserController.newUser);
 router.post("/login", UserController.login);
 router.get('/verify-email', UserController.verifyEmail);
+
+// rotas de categorias
+router.get("/categorias", auth, CategoriaController.index);
+router.get("/categorias/:id", auth, CategoriaController.findCategoria);
+router.post("/categorias", auth, CategoriaController.newCategoria);
+router.put("/categorias/:id", auth, CategoriaController.updateCategoria);
+router.delete("/categorias/:id", auth, CategoriaController.deleteCategoria);
+router.post('/categorias/global', auth, adminAuth, CategoriaController.createCategoriaGlobal);
+
 
 module.exports = router;
