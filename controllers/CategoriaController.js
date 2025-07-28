@@ -1,5 +1,5 @@
 const Categoria = require("../models/Categoria");
-const CategoriaSchema = require("../validators/categoriaSchema");
+const { validateCategoria } = require("../validators/categoriaSchema");
 const categoriaInstance = new Categoria();
 
 class CategoriaController {
@@ -17,32 +17,61 @@ class CategoriaController {
   }
 
   async newCategoria(req, res) {
-    const { error, value } = CategoriaSchema.validate(req.body, {
-      abortEarly: false,
+  try {
+    let value;
+    try {
+      value = validateCategoria(req.body);
+    } catch (err) {
+      const mensagens = err.details?.map((e) => e.message) || [err.message];
+      return res.status(400).json({ erros: mensagens });
+    }
+    const existingCategoria = await categoriaInstance.findByNome(value.nome);
+    if (existingCategoria) {
+      return res.status(400).json({ erro: "Categoria já cadastrada." });
+    }
+
+    await categoriaInstance.create({
+      nome: value.nome,
+      id_user: value.id_user || null,
+      status: value.status || "Ativa"
     });
 
-      if (error) {
-        const mensagens = error.details.map((err) => err.message);
-        return res.status(400).json({ error: mensagens });
+    return res.status(201).json({
+      mensagem: "Categoria cadastrada com sucesso!"
+    });
+
+  } catch (err) {
+    console.error("[CategoriaController]: Erro no registro de categoria:", err);
+    return res.status(500).json({ erro: "Erro interno ao cadastrar." });
+  }
+  }
+
+  async updateCategoria(req, res) {
+    try {
+      const id = req.params.id;
+      let value;
+      try {
+        value = validateCategoria(req.body);
+      } catch (error) {
+        const mensagens = error.details ? error.details.map(e => e.message) : [error.message];
+        return res.status(400).json({ erros: mensagens });
       }
 
-      const existingCategoria = await categoriaInstance.findByNome(value.nome);
-      if (existingCategoria) {
-        return res.status(400).json({ erro: "Categoria já cadastrada." });
-      }
-
-      await categoriaInstance.create({
-        nome_categoria: value.nome,
-        id_user: value.id_user || null
+      await categoriaInstance.update(id, {
+        nome: value.nome,
+        id_user: value.id_user || null,
+        status: value.status || "Ativa"
       });
 
-      return res.status(201).json({
-        mensagem: "Categoria cadastrada com sucesso!"
-      });
+      return res.status(200).json({ mensagem: "Categoria atualizada com sucesso!" });
+
     } catch (err) {
-      console.error("[CategoriaController]: Erro no registro de categoria:", err);
-      return res.status(500).json({ erro: "Erro interno ao cadastrar." });
+      console.error("[CategoriaController]: Erro ao atualizar categoria:", err);
+      return res.status(500).json({ erro: "Erro interno ao atualizar." });
     }
+  }
+
+  
 }
 
 
