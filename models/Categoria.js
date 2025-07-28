@@ -1,7 +1,7 @@
 var db = require("../database/connection.js");
 
 class Categoria {
-  async findAll() {
+  async findAll(userId) {
     try {
       const categorias = await db("tbl_categoria")
         .select(
@@ -11,13 +11,26 @@ class Categoria {
           "status_categoria",
           "criado_em",
           "atualizado_em"
-        )
+        ).where("id_user", userId) .orWhereNull("id_user");  
       return categorias;
     } catch (error) {
       console.error(
         "[CategoriaModel] Erro ao buscar categorias:",
         error.message
       );
+      throw error;
+    }
+  }
+  
+  async findById(id) {
+    try {
+      const categoria = await db("tbl_categoria")
+        .select("id_categoria", "nome_categoria", "id_user", "status_categoria", "criado_em", "atualizado_em")
+        .where("id_categoria", id)
+        .first();
+      return categoria;
+    } catch (error) {
+      console.error("[CategoriaModel] Erro ao buscar categoria por ID:", error.message);
       throw error;
     }
   }
@@ -35,20 +48,36 @@ class Categoria {
     }
   }
 
-  async create(categoriaData) {
+  async createForUser(categoriaData, userId) {
   try {
     const newCategoria = await db("tbl_categoria").insert({
       nome_categoria: categoriaData.nome,
-      id_user: categoriaData.id_user || null,
+      id_user: userId,
       status_categoria: categoriaData.status || 'Ativa',
       criado_em: new Date()
     });
     return newCategoria;
   } catch (error) {
-    console.error("[CategoriaModel] Erro ao criar categoria:", error.message);
+    console.error("[CategoriaModel] Erro ao criar categoria do usuário:", error.message);
     throw error;
-    }
   }
+}
+
+  async createGlobal(categoriaData) {
+  try {
+    const newCategoria = await db("tbl_categoria").insert({
+      nome_categoria: categoriaData.nome,
+      id_user: null,
+      status_categoria: categoriaData.status || 'Ativa',
+      criado_em: new Date()
+    });
+    return newCategoria;
+  } catch (error) {
+    console.error("[CategoriaModel] Erro ao criar categoria global:", error.message);
+    throw error;
+  }
+}
+
 
   async update(id, data) {
     try {

@@ -5,7 +5,8 @@ const categoriaInstance = new Categoria();
 class CategoriaController {
   async index(req, res) {
     try {
-      const categorias = await categoriaInstance.findAll();
+        const userId = req.user.id;
+      const categorias = await categoriaInstance.findAll(userId);
       if (categorias.length === 0) {
         return res.status(404).json({ error: "Nenhuma categoria encontrada" });
       }
@@ -18,37 +19,61 @@ class CategoriaController {
     }
   }
 
-  async newCategoria(req, res) {
+  async findCategoria(req, res) {
+    const { id } = req.params;
     try {
-      let value;
-      try {
-        value = validateCategoria(req.body);
-      } catch (err) {
-        const mensagens = err.details?.map((e) => e.message) || [err.message];
-        return res.status(400).json({ erros: mensagens });
+      const categoria = await categoriaInstance.findById(id);
+      if (!categoria) {
+        return res.status(404).json({ error: "Categoria não encontrada" });
       }
-      const existingCategoria = await categoriaInstance.findByNome(value.nome);
-      if (existingCategoria) {
-        return res.status(400).json({ erro: "Categoria já cadastrada." });
-      }
-
-      await categoriaInstance.create({
-        nome: value.nome,
-        id_user: value.id_user || null,
-        status: value.status || "Ativa",
-      });
-
-      return res.status(201).json({
-        mensagem: "Categoria cadastrada com sucesso!",
-      });
-    } catch (err) {
-      console.error(
-        "[CategoriaController]: Erro no registro de categoria:",
-        err
-      );
-      return res.status(500).json({ erro: "Erro interno ao cadastrar." });
+      return res.status(200).json(categoria);
+    } catch (error) {
+      console.error("[CategoriaController]: Erro ao buscar categoria:", error);
+      return res.status(500).json({ error: "Erro ao procurar categoria" });
     }
   }
+
+  async newCategoria(req, res) {
+  try {
+    const userId = req.user.id;
+
+    let value;
+    try {
+      value = validateCategoria(req.body);
+    } catch (err) {
+      const mensagens = err.details?.map((e) => e.message) || [err.message];
+      return res.status(400).json({ erros: mensagens });
+    }
+
+    const existing = await categoriaInstance.findByNome(value.nome);
+    if (existing) {
+      return res.status(400).json({ erro: "Categoria já cadastrada." });
+    }
+
+    await categoriaInstance.createForUser(value, userId);
+
+    return res.status(201).json({ mensagem: "Categoria criada com sucesso!" });
+
+  } catch (err) {
+    console.error("[CategoriaController]: Erro ao criar categoria:", err);
+    return res.status(500).json({ erro: "Erro interno ao cadastrar categoria." });
+  }
+  }
+
+  async createCategoriaGlobal(req, res) {
+  try {
+    const value = validateCategoria(req.body);
+
+    await categoriaInstance.createGlobal(value);
+
+    return res.status(201).json({ mensagem: 'Categoria global criada com sucesso!' });
+  } catch (err) {
+    console.error("[CategoriaController]: Erro ao criar categoria global:", err);
+    return res.status(500).json({ erro: 'Erro interno ao criar categoria global.' });
+  }
+}
+
+
 
   async updateCategoria(req, res) {
     try {
@@ -93,7 +118,7 @@ class CategoriaController {
       return res.status(500).json({ erro: "Erro interno ao excluir." });
     }
   }
-  
+
 }
 
 module.exports = new CategoriaController();

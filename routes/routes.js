@@ -24,9 +24,12 @@ router.post("/login", UserController.login);
 router.get('/verify-email', UserController.verifyEmail);
 
 // rotas de categorias
-router.get("/categorias", CategoriaController.index);
-router.post("/categorias", CategoriaController.newCategoria);
-router.put("/categorias/:id", CategoriaController.updateCategoria);
-router.delete("/categorias/:id", CategoriaController.deleteCategoria);
+router.get("/categorias", auth, CategoriaController.index);
+router.get("/categorias/:id", auth, CategoriaController.findCategoria);
+router.post("/categorias", auth, CategoriaController.newCategoria);
+router.put("/categorias/:id", auth, CategoriaController.updateCategoria);
+router.delete("/categorias/:id", auth, CategoriaController.deleteCategoria);
+router.post('/categorias/global', auth, adminAuth, CategoriaController.createCategoriaGlobal);
+
 
 module.exports = router;
