@@ -27,5 +27,6 @@ router.get('/verify-email', UserController.verifyEmail);
 router.get("/categorias", CategoriaController.index);
 router.post("/categorias", CategoriaController.newCategoria);
 router.put("/categorias/:id", CategoriaController.updateCategoria);
+router.delete("/categorias/:id", CategoriaController.deleteCategoria);
 
 module.exports = router;

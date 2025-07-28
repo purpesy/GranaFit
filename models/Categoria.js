@@ -50,7 +50,7 @@ class Categoria {
     }
   }
 
-    async update(id, data) {
+  async update(id, data) {
     try {
         if (!data || typeof data !== 'object') {
             throw new Error("Dados de atualização inválidos: 'data' está indefinido ou não é um objeto.");
@@ -68,6 +68,18 @@ class Categoria {
     } catch (error) {
         console.error("[CategoriaModel] Erro ao atualizar categoria:", error.message);
         throw error;
+    }
+  }
+
+  async delete(id) {
+    try {
+      const deletedCategoria = await db("tbl_categoria")
+        .where("id_categoria", id)
+        .del();
+      return deletedCategoria;
+    } catch (error) {
+      console.error("[CategoriaModel] Erro ao deletar categoria:", error.message);
+      throw error;
     }
   }
 
